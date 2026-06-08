@@ -134,6 +134,52 @@ function splitPoolCenter(pool, ratios) {
   return [end, intellectual, end];
 }
 
+/** Trim excess from ratios in repeating order (def, int, agg indices). */
+function trimCycle(pool, ratios, order) {
+  const vals = [...ratios];
+  let excess = vals.reduce((a, b) => a + b, 0) - pool;
+  let orderIdx = 0;
+  let idle = 0;
+  while (excess > 0) {
+    const idx = order[orderIdx++ % order.length];
+    if (vals[idx] > 0) {
+      vals[idx]--;
+      excess--;
+      idle = 0;
+    } else {
+      idle++;
+      if (idle >= order.length) {
+        const fallback = vals.findIndex((v) => v > 0);
+        if (fallback < 0) {
+          break;
+        }
+        vals[fallback]--;
+        excess--;
+        idle = 0;
+      }
+    }
+  }
+  return vals;
+}
+
+/**
+ * Intellectual-heavy with aggressive second: trim int then def, shift def→agg when agg is smallest.
+ * e.g. pool 17 @ 3·9·8 → 2·7·8; pool 17 @ 3·13·4 → 2·11·4 (in-game validated).
+ */
+function splitPoolIntAggSecond(pool, ratios) {
+  const [defRatio, intRatio, aggRatio] = ratios;
+  const excess = defRatio + intRatio + aggRatio - pool;
+  const result = trimCycle(pool, ratios, [1, 1, 0]);
+  if (aggRatio < defRatio && aggRatio < intRatio && excess > 1) {
+    const shifts = Math.floor((excess - 1) / 2);
+    for (let k = 0; k < shifts && result[0] > 0; k++) {
+      result[0]--;
+      result[2]++;
+    }
+  }
+  return result;
+}
+
 /**
  * Intellectual-heavy notches below 20pt: trim from int, shift to the heavier end.
  * e.g. pool 19 @ 8·9·3 → 9·8·2; pool 19 @ 3·9·8 → 2·8·9 (in-game validated).
@@ -181,7 +227,13 @@ export function categoryAllocation(pool, sliderPos) {
   if (pos === 5 && ratios[0] === ratios[2]) {
     parts = splitPoolCenter(pool, ratios);
   } else if (pool < 20) {
-    parts = splitPoolIntelHeavy(pool, ratios) ?? splitPool(pool, ratios);
+    const [defRatio, intRatio, aggRatio] = ratios;
+    const excess = defRatio + intRatio + aggRatio - pool;
+    if (intRatio > defRatio && intRatio > aggRatio && aggRatio > defRatio && excess > 1) {
+      parts = splitPoolIntAggSecond(pool, ratios);
+    } else {
+      parts = splitPoolIntelHeavy(pool, ratios) ?? splitPool(pool, ratios);
+    }
   } else {
     parts = splitPool(pool, ratios);
   }
