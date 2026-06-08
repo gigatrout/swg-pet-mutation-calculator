@@ -163,6 +163,14 @@ function trimCycle(pool, ratios, order) {
 }
 
 /**
+ * Intellectual-heavy with defensive second: trim int then agg (keeps def at ratio).
+ * e.g. pool 17 @ 8·9·3 → 8·7·2 (in-game validated).
+ */
+function splitPoolIntDefSecond(pool, ratios) {
+  return trimCycle(pool, ratios, [1, 1, 2]);
+}
+
+/**
  * Intellectual-heavy with aggressive second: trim int then def, shift def→agg when agg is smallest.
  * e.g. pool 17 @ 3·9·8 → 2·7·8; pool 17 @ 3·13·4 → 2·11·4 (in-game validated).
  */
@@ -231,6 +239,15 @@ export function categoryAllocation(pool, sliderPos) {
     const excess = defRatio + intRatio + aggRatio - pool;
     if (intRatio > defRatio && intRatio > aggRatio && aggRatio > defRatio && excess > 1) {
       parts = splitPoolIntAggSecond(pool, ratios);
+    } else if (
+      intRatio > defRatio &&
+      intRatio > aggRatio &&
+      defRatio > aggRatio &&
+      excess > 1 &&
+      intRatio - defRatio === 1 &&
+      excess === 3
+    ) {
+      parts = splitPoolIntDefSecond(pool, ratios);
     } else {
       parts = splitPoolIntelHeavy(pool, ratios) ?? splitPool(pool, ratios);
     }
