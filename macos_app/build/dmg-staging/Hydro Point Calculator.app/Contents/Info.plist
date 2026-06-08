@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>Hydro Point Calculator</string>
+	<key>CFBundleExecutable</key>
+	<string>Hydro Point Calculator</string>
+	<key>CFBundleIconFile</key>
+	<string>generated-97b6c4653edaa927360ad7d8689dc9b265b41aadc09304121d7eb10302a79e1d.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>Hydro Point Calculator</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Hydro Point Calculator</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.0.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+</dict>
+</plist>

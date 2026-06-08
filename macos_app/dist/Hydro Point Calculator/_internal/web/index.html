@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hydro Point Distribution Calculator</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="mut-app">
+  <div id="app-shell" class="app-shell">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <h1>Hydro point distribution</h1>
+      <p class="sub">Set purity and sliders, click bubbles to allocate. Mark appearance mutations for +2/skill. Target 60 combined.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="layout-side">
+      <div class="side-block mutation-guide-block">
+        <span class="preset-label">Mutation enzyme guide (swgpets.com)</span>
+        <div class="mutation-guide-controls">
+          <select id="pet-mutation-select" class="preset-select" aria-label="Select pet for mutation enzyme guide">
+            <option value="">Select a pet…</option>
+          </select>
+        </div>
+        <div id="mutation-guide-panel" class="mutation-guide-panel" hidden></div>
+      </div>
+
+      <div class="side-block actions-block">
+        <span class="preset-label">Schedules (from Hydro Combos.xls)</span>
+        <div id="hydro-presets" class="preset-groups"></div>
+        <div class="action-row">
+          <button type="button" class="btn-secondary" id="reset-session">Clear session</button>
+          <button type="button" class="btn-secondary" id="reset-all">Reset all</button>
+        </div>
+        <details class="mapping-ref">
+          <summary>Category → skills</summary>
+          <ul>
+            <li><strong>Defensive</strong> — Survival, Bestial Resilience</li>
+            <li><strong>Intellectual</strong> — Cunning, Intelligence</li>
+            <li><strong>Aggressive</strong> — Aggression, Hunter's Instinct</li>
+          </ul>
+        </details>
+      </div>
+    </aside>
+
+    <div class="incubation-window">
+      <div class="window-top">
+        <div class="session-tabs" id="session-tabs" role="tablist"></div>
+
+        <div class="top-row">
+          <label class="field purity-field">
+            Hydrolase purity
+            <input type="number" id="hydro-purity" min="0" max="30" step="0.01" value="20" />
+          </label>
+          <label class="field quality-field">
+            Top isomerase %
+            <input type="text" id="top-iso-pct" inputmode="decimal" autocomplete="off" spellcheck="false" value="90" />
+          </label>
+          <div class="pool-banner">
+            <div><span class="pool-label">Pool</span> <strong id="pool-total">0</strong></div>
+            <div><span class="pool-label">Allocated</span> <strong id="pool-spent">0</strong></div>
+            <div><span class="pool-label">Unplaced</span> <strong id="pool-remaining">0</strong></div>
+          </div>
+        </div>
+        <p class="field-hint">Spendable points = floor(purity). Purity does not round up. Top isomerase % accepts decimals (e.g. 89.33–90); 90% is the cap.</p>
+        <p class="field-hint purity-hint" id="purity-hint"></p>
+        <div class="incubator-bonus-strip">
+          <div class="bonus-grid">
+            <label class="field">
+              Geothermal power OQ
+              <input type="number" id="power-quality" min="0" max="1000" step="1" value="1000" />
+            </label>
+            <label class="field">
+              Expertise (incubation quality)
+              <input type="number" id="expertise-incubation" min="0" step="1" value="20" />
+            </label>
+            <label class="field">
+              Station quality
+              <input type="number" id="station-quality" min="-12" max="4" step="0.1" value="4" />
+            </label>
+            <label class="field">
+              Focused Enzyme Manipulation (FEM)
+              <input type="number" id="re-dps-armor" min="0" max="10" step="1" value="9" />
+            </label>
+            <label class="field checkbox-field">
+              <input type="checkbox" id="converted-pet" />
+              Converted pet (+5 slot-1 quality)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="window-body" id="window-body">
+        <div class="allocation-pane">
+          <aside class="controls-rail">
+            <div class="sliders-pair">
+              <div class="slider-stack">
+                <span class="rail-title">Temperature</span>
+                <div class="slider-col">
+                  <button type="button" class="slider-btn" id="temp-up" aria-label="Increase temperature">+</button>
+                  <div class="slider-track-wrap temp-track-wrap">
+                    <input type="range" id="temp-slider" min="0" max="10" step="1" value="5" orient="vertical" />
+                  </div>
+                  <button type="button" class="slider-btn" id="temp-down" aria-label="Decrease temperature">−</button>
+                </div>
+                <span class="slider-value temp-value" id="temp-value">5</span>
+                <p class="slider-pos-hint">0 = armor · 10 = DPS</p>
+                <p class="ratio-hint temp-split-hint" id="temp-split-hint">—</p>
+              </div>
+
+              <div class="slider-stack">
+                <span class="rail-title">Nutrient</span>
+                <div class="slider-col">
+                  <button type="button" class="slider-btn" id="nutrient-up" aria-label="Increase nutrient">+</button>
+                  <div class="slider-track-wrap">
+                    <input type="range" id="nutrient-slider" min="0" max="10" step="1" value="5" orient="vertical" />
+                  </div>
+                  <button type="button" class="slider-btn" id="nutrient-down" aria-label="Decrease nutrient">−</button>
+                </div>
+                <span class="slider-value" id="nutrient-value">5</span>
+                <p class="slider-pos-hint">0 = top · 5 = center · 10 = bottom</p>
+                <p class="ratio-hint" id="ratio-hint">Ratio ~ —</p>
+              </div>
+            </div>
+
+            <div class="anchor-row" id="anchor-row">
+              <button type="button" class="anchor-btn" data-slider="9">—</button>
+              <button type="button" class="anchor-btn" data-slider="5">—</button>
+              <button type="button" class="anchor-btn" data-slider="1">—</button>
+              <button type="button" class="anchor-btn" data-slider="6">—</button>
+              <button type="button" class="anchor-btn" data-slider="4">—</button>
+            </div>
+          </aside>
+
+          <main class="skills-stack">
+            <p class="skills-hint" id="skills-hint">Click a bubble to fill through it · last filled to remove one</p>
+            <div id="skills-root"></div>
+          </main>
+        </div>
+
+        <aside class="summary-rail" aria-label="Totals and pet bonus">
+          <section class="summary-block summary-pet">
+            <div class="pet-bonus-strip" id="pet-bonus-strip" aria-live="polite"></div>
+          </section>
+
+          <section class="summary-block summary-mutation">
+            <fieldset class="mut-fieldset">
+              <legend>Appearance mutation (+2/skill, max 2)</legend>
+              <div class="mut-sessions">
+                <label><input type="checkbox" data-session-mut="0" /> S1</label>
+                <label><input type="checkbox" data-session-mut="1" /> S2</label>
+                <label><input type="checkbox" data-session-mut="2" /> S3</label>
+              </div>
+            </fieldset>
+            <p class="mut-note" id="mut-note"></p>
+          </section>
+
+          <section class="summary-block summary-skills">
+            <div id="grand-summary" class="grand-summary"></div>
+          </section>
+
+          <section class="summary-block summary-totals">
+            <div class="grand-totals">
+              <div><span>Hydro placed</span><strong id="hydro-total">0</strong></div>
+              <div><span>Mutation bonus</span><strong id="mut-bonus">+0</strong></div>
+              <div class="combined-row"><span>Combined</span><strong id="combined-total">0</strong> / 60</div>
+            </div>
+            <p class="target-note" id="target-note"></p>
+          </section>
+
+          <section class="summary-block summary-dps">
+            <div class="dps-armor-panel" id="dps-armor-panel"></div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
+  </div><!-- app-shell -->
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
