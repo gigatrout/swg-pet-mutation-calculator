@@ -658,6 +658,13 @@ function sessionContext() {
   };
 }
 
+/** Per-category skill totals from a full skill map (e.g. grandTotals.totals). */
+function categoryTotalsFromSkills(skillTotals) {
+  return Object.fromEntries(
+    CATEGORIES.map((cat) => [cat.id, categorySpent(skillTotals, cat.id)])
+  );
+}
+
 function renderSessionTabs() {
   const tabsRoot = document.getElementById("session-tabs");
   if (!tabsRoot) {
@@ -705,6 +712,9 @@ function render() {
   const editSession = preview ? state.sessions[SESSION_COUNT - 1] : session;
   const spent = sessionSpent(editSession.points);
   const remaining = Math.max(0, pool - spent);
+  const gt = grandTotals(state.sessions);
+  const finalCategoryTotals = preview ? categoryTotalsFromSkills(gt.totals) : null;
+  const ptsRemaining = Math.max(0, PERFECT_PET_TARGET - gt.combined);
 
   const syncInputValue = (el, value) => {
     if (el && document.activeElement !== el) {
@@ -739,13 +749,20 @@ function render() {
   slider.disabled = preview;
   slider.value = String(editSession.slider);
   document.getElementById("nutrient-value").textContent = String(gameNutrientPos(session.slider));
-  document.getElementById("pool-total").textContent = String(pool);
-  document.getElementById("pool-remaining").textContent = String(remaining);
-  document.getElementById("pool-spent").textContent = String(spent);
-
-  const ratios = alloc.ratios.join(" : ");
-  document.getElementById("ratio-hint").textContent =
-    `${alloc.defensive} · ${alloc.intellectual} · ${alloc.aggressive} (ratio ${ratios})`;
+  if (preview) {
+    document.getElementById("pool-total").textContent = String(gt.hydroSpent);
+    document.getElementById("pool-spent").textContent = String(gt.combined);
+    document.getElementById("pool-remaining").textContent = String(ptsRemaining);
+    document.getElementById("ratio-hint").textContent =
+      `${finalCategoryTotals.defensive} · ${finalCategoryTotals.intellectual} · ${finalCategoryTotals.aggressive} (final build)`;
+  } else {
+    document.getElementById("pool-total").textContent = String(pool);
+    document.getElementById("pool-remaining").textContent = String(remaining);
+    document.getElementById("pool-spent").textContent = String(spent);
+    const ratios = alloc.ratios.join(" : ");
+    document.getElementById("ratio-hint").textContent =
+      `${alloc.defensive} · ${alloc.intellectual} · ${alloc.aggressive} (ratio ${ratios})`;
+  }
 
   const tempSlider = document.getElementById("temp-slider");
   if (tempSlider) {
@@ -777,9 +794,19 @@ function render() {
     if (overCapacity) {
       hints.push(`Only ${maxPlaceable} empty slot(s) left — set purity to ≤ ${maxPlaceable}.`);
     }
-    if (
-      !preview
-      && state.activeSession === 2
+    if (preview) {
+      if (gt.combined === PERFECT_PET_TARGET && ptsRemaining === 0) {
+        hints.push(`Perfect ${PERFECT_PET_TARGET}-point pet — 0 pt remaining.`);
+      } else if (ptsRemaining > 0) {
+        hints.push(`${ptsRemaining} pt remaining to reach ${PERFECT_PET_TARGET}.`);
+      }
+      if (gt.mutBonusWasted > 0) {
+        hints.push(
+          `${gt.mutBonusWasted} mutation pt${gt.mutBonusWasted === 1 ? "" : "s"} had no room (10/skill cap).`
+        );
+      }
+    } else if (
+      state.activeSession === 2
       && state.sessions[1]?.appearanceMutation
       && maxPlaceable > 0
     ) {
@@ -794,8 +821,12 @@ function render() {
   const skillsHint = document.getElementById("skills-hint");
   if (skillsHint) {
     if (preview) {
+      const perfect =
+        gt.combined === PERFECT_PET_TARGET && ptsRemaining === 0
+          ? ` Perfect ${PERFECT_PET_TARGET}-point pet — 0 pt remaining.`
+          : "";
       skillsHint.textContent =
-        "Read-only final build — dim = hydro · purple = appearance mutation (+2/skill each)";
+        `Read-only final build — dim = hydro · purple = appearance mutation (+2/skill each).${perfect}`;
     } else {
       const hasPriorMut = SKILLS.some((s) => (priorMutTotals()[s.id] || 0) > 0);
       const mutHint = hasPriorMut
@@ -813,8 +844,8 @@ function render() {
   const skillById = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
 
   for (const cat of CATEGORIES) {
-    const budget = categoryBudget[cat.id];
-    const catSpent = preview ? 0 : categorySpent(editSession.points, cat.id);
+    const budget = preview ? finalCategoryTotals[cat.id] : categoryBudget[cat.id];
+    const catSpent = preview ? budget : categorySpent(editSession.points, cat.id);
 
     const block = document.createElement("section");
     block.className = `category-block category-${cat.id}`;
@@ -952,8 +983,6 @@ function render() {
     input.disabled = !input.checked && mutCount >= MAX_APPEARANCE_MUTATIONS;
   });
 
-  const gt = grandTotals(state.sessions);
-
   const summary = document.getElementById("grand-summary");
   summary.innerHTML = SKILLS.map((skill) => {
     const v = gt.totals[skill.id];
@@ -981,11 +1010,22 @@ function render() {
   document.getElementById("target-note").textContent = targetNote;
 
   const hydroNeeded = Math.max(0, PERFECT_PET_TARGET - gt.mutBonus);
-  let mutNote = mutCount === 0
-    ? `No appearance mutations — need ${PERFECT_PET_TARGET} from hydros.`
-    : `${mutCount}/${MAX_APPEARANCE_MUTATIONS} marked — +${gt.mutBonus} free (+${APPEARANCE_MUTATION_PER_SKILL}/skill). Hydro for 60: ${hydroNeeded}.`;
-  if (showPreviewTab()) {
-    mutNote += " Open Final tab to see all mutation points after session 3.";
+  let mutNote;
+  if (preview) {
+    mutNote =
+      gt.combined === PERFECT_PET_TARGET && ptsRemaining === 0
+        ? `Perfect ${PERFECT_PET_TARGET}-point pet — 0 pt remaining (${gt.hydroSpent} hydro + ${gt.mutBonus} mutation).`
+        : `${ptsRemaining} pt remaining for a ${PERFECT_PET_TARGET}-point pet (${gt.hydroSpent} hydro + ${gt.mutBonus} mutation).`;
+    if (gt.mutBonusWasted > 0) {
+      mutNote += ` ${gt.mutBonusWasted} mutation pt${gt.mutBonusWasted === 1 ? "" : "s"} capped at 10/skill.`;
+    }
+  } else {
+    mutNote = mutCount === 0
+      ? `No appearance mutations — need ${PERFECT_PET_TARGET} from hydros.`
+      : `${mutCount}/${MAX_APPEARANCE_MUTATIONS} marked — +${gt.mutBonus} free (+${APPEARANCE_MUTATION_PER_SKILL}/skill). Hydro for 60: ${hydroNeeded}.`;
+    if (showPreviewTab()) {
+      mutNote += " Open Final tab to see the completed build.";
+    }
   }
   document.getElementById("mut-note").textContent = mutNote;
 
