@@ -11,7 +11,7 @@ if [[ -z "$SRC" || -z "$DEST" ]]; then
 fi
 
 mkdir -p "$DEST"
-for name in index.html app.js incubation_calc.js styles.css hydro_combos_data.js pet_mutations_data.js \
+for name in index.html app.js incubation_calc.js nutrient_alloc_data.js styles.css hydro_combos_data.js pet_mutations_data.js \
   favicon.ico favicon-16.png favicon-32.png; do
   if [[ -f "$SRC/$name" ]]; then
     cp "$SRC/$name" "$DEST/"

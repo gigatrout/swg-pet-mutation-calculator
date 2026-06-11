@@ -27,6 +27,21 @@ NUTRIENT_TABLE = [
     [0, 0, 20],
 ]
 
+# In-game validated D·I·A per slider notch at pool=8.
+IN_GAME_POOL8 = [
+    [8, 0, 0],
+    [7, 1, 0],
+    [6, 2, 0],
+    [4, 3, 1],
+    [2, 5, 1],
+    [1, 6, 1],
+    [1, 5, 2],
+    [1, 3, 4],
+    [0, 2, 6],
+    [0, 1, 7],
+    [0, 0, 8],
+]
+
 
 def trim_cycle(pool: int, ratios: list[int], order: list[int]) -> list[int]:
     vals = list(ratios)
@@ -92,6 +107,25 @@ def int_agg_second(pool: int, ratios: list[int]) -> list[int]:
     return result
 
 
+def int_def_second(pool: int, ratios: list[int]) -> list[int]:
+    return trim_cycle(pool, ratios, [1, 1, 2])
+
+
+def trim_sequential(pool: int, ratios: list[int], order: list[int]) -> list[int]:
+    """Remove excess points following order prefix, then cycle if needed."""
+    vals = list(ratios)
+    excess = sum(vals) - pool
+    if excess <= 0:
+        return vals
+    for idx in order[:excess]:
+        if vals[idx] > 0:
+            vals[idx] -= 1
+    remaining = sum(vals) - pool
+    if remaining > 0:
+        vals = trim_cycle(pool, vals, order or [0, 1, 2])
+    return vals
+
+
 def bfs_order(pool: int, ratios: list[int], target: list[int]) -> list[int] | None:
     tgt = ",".join(str(x) for x in target)
     q: deque[tuple[list[int], list[int]]] = deque([(list(ratios), [])])
@@ -155,13 +189,13 @@ def main() -> None:
                 if got == target:
                     candidates.append((pos, []))
                 continue
-            if pool == 19:
+            if pool in (18, 19):
                 ih = intel_heavy(pool, ratios)
                 if ih == target:
                     candidates.append((pos, []))
             order = bfs_order(pool, ratios, target)
             if order is not None:
-                got = trim_cycle(pool, ratios, order)
+                got = trim_sequential(pool, ratios, order)
                 if got == target:
                     candidates.append((pos, order))
 
@@ -203,28 +237,73 @@ def main() -> None:
         return best
 
     def alloc(pool: int, pos: int) -> list[int]:
+        if pool == 8:
+            return list(IN_GAME_POOL8[pos])
         ratios = NUTRIENT_TABLE[pos]
         if pool >= 20:
             return list(ratios)
+        if pos == 0:
+            return [pool, 0, 0]
+        if pos == 10:
+            return [0, 0, pool]
         if pos == 5 and ratios[0] == ratios[2]:
             return split_center(pool, ratios)
-        if pool == 19:
-            ih = intel_heavy(pool, ratios)
-            if ih is not None:
-                return ih
         d, i, a = ratios
         excess = 20 - pool
         order = order_for(pos, pool)
         if order:
-            return trim_cycle(pool, ratios, order)
+            return trim_sequential(pool, ratios, order)
+        if (
+            i > d
+            and i > a
+            and d > a
+            and excess > 1
+            and i - d == 1
+            and excess == 3
+        ):
+            return int_def_second(pool, ratios)
         if i > d and i > a and a > d and excess > 1:
             return int_agg_second(pool, ratios)
+        if pool in (18, 19):
+            ih = intel_heavy(pool, ratios)
+            if ih is not None:
+                return ih
         ih = intel_heavy(pool, ratios)
         if ih is not None:
             return ih
         return trim_cycle(pool, ratios, [1, 1, 0])
 
     table = [[alloc(pool, pos) for pool in range(21)] for pos in range(11)]
+
+    def session_slider_pos(pool: int, target: list[int]) -> int | None:
+        if pool == 8:
+            for pos, row in enumerate(IN_GAME_POOL8):
+                if row == target:
+                    return pos
+        for pos in range(11):
+            ratios = NUTRIENT_TABLE[pos]
+            if pos == 0 and target == [pool, 0, 0]:
+                return pos
+            if pos == 10 and target == [0, 0, pool]:
+                return pos
+            if pos == 5 and ratios[0] == ratios[2] and split_center(pool, ratios) == target:
+                return pos
+            if pool in (18, 19):
+                ih = intel_heavy(pool, ratios)
+                if ih == target:
+                    return pos
+            order = bfs_order(pool, ratios, target)
+            if order is not None and trim_sequential(pool, ratios, order) == target:
+                return pos
+        return None
+
+    # Pin combo-session splits (and in-game pool-8) so every known path is exact.
+    for pos, row in enumerate(IN_GAME_POOL8):
+        table[pos][8] = list(row)
+    for key, s in sessions.items():
+        pos = session_pos.get(key) or session_slider_pos(s["pool"], s["dia"])
+        if pos is not None:
+            table[pos][s["pool"]] = list(s["dia"])
 
     hits = 0
     misses: list[str] = []

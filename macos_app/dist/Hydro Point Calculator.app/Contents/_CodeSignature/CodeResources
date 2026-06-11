@@ -6,7 +6,7 @@
 	<dict>
 		<key>Resources/base_library.zip</key>
 		<data>
-		vEE29ez04KC/o7XIhlI4dYZnWJw=
+		6qrBI6FbCqOP49QYe6we2NjeSMU=
 		</data>
 		<key>Resources/generated-97b6c4653edaa927360ad7d8689dc9b265b41aadc09304121d7eb10302a79e1d.icns</key>
 		<data>
@@ -734,11 +734,15 @@
 		</data>
 		<key>Resources/web/incubation_calc.js</key>
 		<data>
-		5LAxhvxeX1LnDGciI7cgehBqAz0=
+		c/TpiW9N4B+1LlgEfZUcUMukQdE=
 		</data>
 		<key>Resources/web/index.html</key>
 		<data>
 		Kgld91lLZSXz2ipVq86MiNiOWeg=
+		</data>
+		<key>Resources/web/nutrient_alloc_data.js</key>
+		<data>
+		uNMVMxL2Xs4LH+2w0O6Ut6JNBB4=
 		</data>
 		<key>Resources/web/pet_mutations_data.js</key>
 		<data>
@@ -1401,7 +1405,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			3bTkcCj1+djzhclg5cSk/B2rNDSHEOJExWMAB7zuBY0=
+			BAVRnJh/X/RPfM52GBQ4IormNtAcE39knDBtXPr4ees=
 			</data>
 		</dict>
 		<key>Resources/generated-97b6c4653edaa927360ad7d8689dc9b265b41aadc09304121d7eb10302a79e1d.icns</key>
@@ -2695,7 +2699,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			GohHx+jRhGOaOeOWAbvIUFwdgs9eqw/NdteadEIHt3I=
+			jyQfgHWEEq0rQSNVsSqc34eqO5S172RzkqPIdRaUI5E=
 			</data>
 		</dict>
 		<key>Resources/web/index.html</key>
@@ -2703,6 +2707,13 @@
 			<key>hash2</key>
 			<data>
 			gPciZkNpnh92Pbr0f48hhiDRw38hewl6P251rXeS5r8=
+			</data>
+		</dict>
+		<key>Resources/web/nutrient_alloc_data.js</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Xsuf1JQjv9trhwJTwewinWNEkumO9/Ia7PRlpThBezk=
 			</data>
 		</dict>
 		<key>Resources/web/pet_mutations_data.js</key>

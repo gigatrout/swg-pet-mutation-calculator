@@ -20,7 +20,7 @@ if (Get-Command bash -ErrorAction SilentlyContinue) {
     & bash $sync $CalcRoot $WebDest
 } else {
     foreach ($name in @(
-        "index.html", "app.js", "incubation_calc.js", "styles.css", "hydro_combos_data.js", "pet_mutations_data.js",
+        "index.html", "app.js", "incubation_calc.js", "nutrient_alloc_data.js", "styles.css", "hydro_combos_data.js", "pet_mutations_data.js",
         "favicon.ico", "favicon-16.png", "favicon-32.png"
     )) {
         $file = Join-Path $CalcRoot $name

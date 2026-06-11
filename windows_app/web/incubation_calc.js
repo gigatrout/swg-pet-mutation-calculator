@@ -1,5 +1,7 @@
 "use strict";
 
+import { NUTRIENT_ALLOC_TABLE } from "./nutrient_alloc_data.js";
+
 /** Matches incubator.TEMP_SCALE_MAX_RANGE */
 export const TEMP_MAX = 10;
 
@@ -231,28 +233,12 @@ function splitPoolIntelHeavy(pool, ratios) {
 export function categoryAllocation(pool, sliderPos) {
   const ratios = nutrientRatios(sliderPos);
   const pos = gameNutrientPos(sliderPos);
+  const poolKey = Math.min(20, Math.max(0, Math.floor(Number(pool) || 0)));
   let parts;
-  if (pos === 5 && ratios[0] === ratios[2]) {
-    parts = splitPoolCenter(pool, ratios);
-  } else if (pool < 20) {
-    const [defRatio, intRatio, aggRatio] = ratios;
-    const excess = defRatio + intRatio + aggRatio - pool;
-    if (intRatio > defRatio && intRatio > aggRatio && aggRatio > defRatio && excess > 1) {
-      parts = splitPoolIntAggSecond(pool, ratios);
-    } else if (
-      intRatio > defRatio &&
-      intRatio > aggRatio &&
-      defRatio > aggRatio &&
-      excess > 1 &&
-      intRatio - defRatio === 1 &&
-      excess === 3
-    ) {
-      parts = splitPoolIntDefSecond(pool, ratios);
-    } else {
-      parts = splitPoolIntelHeavy(pool, ratios) ?? splitPool(pool, ratios);
-    }
+  if (poolKey < 20) {
+    parts = [...NUTRIENT_ALLOC_TABLE[pos][poolKey]];
   } else {
-    parts = splitPool(pool, ratios);
+    parts = splitPool(poolKey, ratios);
   }
   const [defensive, intellectual, aggressive] = parts;
   return { defensive, intellectual, aggressive, ratios };
