@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hydro Point Distribution Calculator</title>
+  <title>SWG Beastmaster Tools</title>
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
@@ -11,13 +11,23 @@
 </head>
 <body>
 <div id="mut-app">
-  <div id="app-shell" class="app-shell">
   <header class="app-header">
     <div class="app-header-inner">
-      <h1>Hydro point distribution</h1>
-      <p class="sub">Set purity and sliders, click bubbles to allocate. Mark appearance mutations for +2/skill. Target 60 combined.</p>
+      <h1>SWG Beastmaster Tools</h1>
+      <p class="sub">Hydrolase refining, incubation planning, and hydro point distribution for beastmasters.</p>
+      <nav class="tool-tabs" id="tool-tabs" role="tablist" aria-label="Calculator tools">
+        <button type="button" class="tool-tab active" data-tool="hydro-distribution" role="tab" aria-selected="true">Hydro distribution</button>
+        <button type="button" class="tool-tab" data-tool="hydrolase" role="tab" aria-selected="false">Hydrolase calculator</button>
+      </nav>
     </div>
   </header>
+
+  <div id="hydro-distribution-tool" class="tool-panel active">
+  <div id="app-shell" class="app-shell">
+  <div class="tool-section-header">
+    <h2>Hydro point distribution</h2>
+    <p class="sub">Set purity and sliders, click bubbles to allocate. Mark appearance mutations for +2/skill. Target 60 combined.</p>
+  </div>
 
   <div class="layout">
     <aside class="layout-side">
@@ -182,7 +192,10 @@
     </div>
   </div>
   </div><!-- app-shell -->
+  </div><!-- hydro-distribution-tool -->
+
+  <div id="hydrolase-tool" class="tool-panel" hidden></div>
 </div>
-<script type="module" src="app.js"></script>
+<script type="module" src="main.js"></script>
 </body>
 </html>

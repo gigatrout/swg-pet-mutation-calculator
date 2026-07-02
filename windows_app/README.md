@@ -1,4 +1,4 @@
-# Hydro Point Calculator — Windows
+# SWG Beastmaster Tools — Windows
 
 Desktop build of the mutation / hydro point planner. The UI is the same web app used in the browser at the project root; this folder packages it as a Windows `.exe` with PyInstaller and pywebview.
 
@@ -71,10 +71,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build_windows.ps1
 After a successful build:
 
 ```
-windows_app\dist\Hydro Point Calculator\Hydro Point Calculator.exe
+windows_app\dist\SWG Beastmaster Tools\SWG Beastmaster Tools.exe
 ```
 
-Copy that folder wherever you like, or zip it for distribution. The whole `Hydro Point Calculator` directory is required (not just the `.exe`).
+Copy that folder wherever you like, or zip it for distribution. The whole `SWG Beastmaster Tools` directory is required (not just the `.exe`).
 
 ## After updates on another machine
 
@@ -104,6 +104,6 @@ If Git Bash is not installed, the build script still copies the main web files f
 |------|---------|
 | `web/` | Staged web assets (synced from project root; used for reference, build copies fresh files into `build/web/`) |
 | `build/` | Temporary PyInstaller output (safe to delete) |
-| `dist/` | Final `Hydro Point Calculator.exe` and dependencies |
+| `dist/` | Final `SWG Beastmaster Tools.exe` and dependencies |
 | `build_windows.ps1` | Main build script |
 | `build_windows.bat` | Wrapper that launches the PowerShell script |

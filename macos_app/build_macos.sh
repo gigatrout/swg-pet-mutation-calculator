@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a macOS .app and .dmg for Hydro Point Calculator.
+# Build a macOS .app and .dmg for SWG Beastmaster Tools.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -7,7 +7,7 @@ CALC_ROOT="$(cd "$ROOT/.." && pwd)"
 SRC="$CALC_ROOT/python_app"
 BUILD="$ROOT/build"
 DIST="$ROOT/dist"
-APP_NAME="Hydro Point Calculator"
+APP_NAME="SWG Beastmaster Tools"
 ICON="$CALC_ROOT/favicon-32.png"
 
 rm -rf "$BUILD" "$DIST"
@@ -37,7 +37,7 @@ fi
 python3 -m PyInstaller "${PY_ARGS[@]}" "$BUILD/app.py"
 
 APP_PATH="$DIST/$APP_NAME.app"
-DMG_PATH="$ROOT/Hydro-Point-Calculator.dmg"
+DMG_PATH="$ROOT/SWG-Beastmaster-Tools.dmg"
 STAGING="$BUILD/dmg-staging"
 
 rm -f "$DMG_PATH"

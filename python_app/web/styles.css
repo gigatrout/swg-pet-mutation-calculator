@@ -1448,3 +1448,248 @@ body {
     flex: none;
   }
 }
+
+/* ── Top-level tool tabs ───────────────────────────────────────── */
+.tool-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.tool-tab {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tool-tab:hover:not(.active) {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
+.tool-tab.active {
+  color: var(--accent);
+  background: var(--surface2);
+  box-shadow: var(--shadow-sm);
+}
+
+.tool-panel {
+  display: none;
+}
+
+.tool-panel.active {
+  display: block;
+}
+
+.tool-section-header {
+  margin-bottom: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.tool-section-header h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tool-section-header .sub {
+  margin: var(--space-xs) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+}
+
+/* ── Hydrolase calculator ─────────────────────────────────────── */
+.hydrolase-app {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.hydrolase-subtabs,
+.process-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.hydrolase-subtab,
+.process-tab {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.hydrolase-subtab:hover:not(.active),
+.process-tab:hover:not(.active) {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
+.hydrolase-subtab.active,
+.process-tab.active {
+  color: var(--accent);
+  background: var(--surface2);
+  box-shadow: var(--shadow-sm);
+}
+
+.hydrolase-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 900px) {
+  .hydrolase-body {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.hydrolase-card {
+  padding: var(--space-lg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.hydrolase-card-title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.hydrolase-field {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) 8rem;
+  gap: var(--space-sm);
+  align-items: center;
+  margin-bottom: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.hydrolase-field input,
+.hydrolase-field select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+}
+
+.hydrolase-field input:focus,
+.hydrolase-field select:focus {
+  outline: 2px solid var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.element-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.element-fieldset {
+  margin: 0;
+  padding: var(--space-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.element-fieldset legend {
+  padding: 0 var(--space-xs);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.element-fieldset .hydrolase-field {
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+}
+
+.hydrolase-avg {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.hydrolase-range {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hydrolase-detail {
+  margin: var(--space-md) 0;
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: var(--text-secondary);
+  min-height: 10rem;
+}
+
+.hydrolase-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.hydrolase-result-list {
+  margin: 0;
+}
+
+.hydrolase-result-list > div {
+  margin-bottom: var(--space-md);
+}
+
+.hydrolase-result-list dt {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.hydrolase-result-list dd {
+  margin: 0.15rem 0 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text);
+}
+

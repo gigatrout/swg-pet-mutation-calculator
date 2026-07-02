@@ -1,11 +1,11 @@
-# Build Hydro Point Calculator.exe on Windows (run in PowerShell).
+# Build SWG Beastmaster Tools.exe on Windows (run in PowerShell).
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $CalcRoot = Split-Path -Parent $Root
 $Src = Join-Path $CalcRoot "python_app"
 $Build = Join-Path $Root "build"
 $Dist = Join-Path $Root "dist"
-$AppName = "Hydro Point Calculator"
+$AppName = "SWG Beastmaster Tools"
 $Icon = Join-Path $CalcRoot "favicon-32.png"
 $WebDest = Join-Path $Build "web"
 

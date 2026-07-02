@@ -1286,7 +1286,7 @@ function bind() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+export function initMutationApp() {
   bind();
   render();
-});
+}

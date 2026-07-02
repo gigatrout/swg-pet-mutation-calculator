@@ -1,12 +1,16 @@
-# SWG Pet Mutation / Hydro Point Calculator
+# SWG Beastmaster Tools
 
-Plan beast incubator sessions for **Star Wars Galaxies** (Legends-style pet mutation). Set hydrolase purity per session, split points across Defensive · Intellectual · Aggressive with the nutrient slider, place hydro on each skill, and track appearance mutations (+2 per skill) toward a **60-point** perfect pet build.
+A unified toolkit for **Star Wars Galaxies** beastmasters: plan hydrolase refining, estimate incubation bonuses, and distribute hydro points across pet incubator sessions toward a **60-point** perfect pet build.
 
 Repository: [github.com/gigatrout/swg-pet-mutation-calculator](https://github.com/gigatrout/swg-pet-mutation-calculator)
+
+Use the tabs at the top to switch between **Hydro distribution** and **Hydrolase calculator**.
 
 ---
 
 ## What it does
+
+### Hydro distribution
 
 | Area | Purpose |
 |------|---------|
@@ -18,7 +22,15 @@ Repository: [github.com/gigatrout/swg-pet-mutation-calculator](https://github.co
 | **Combo schedules** | Preset paths from *Hydro Combos.xls* (48pt / 36pt / 60pt purity layouts) |
 | **Pet mutation guide** | Enzyme table per pet (data from [swgpets.com](https://swgpets.com)) |
 
-**Category → skills**
+### Hydrolase calculator
+
+| Area | Purpose |
+|------|---------|
+| **Centrifuge / Processor / Re-processing** | Estimate purity and mutagen ranges after each refining step |
+| **Per-process memory** | Centrifuge, Processor, and Re-processing each keep their own input values when you switch between them |
+| **Focused Enzyme (incubation)** | Estimate isomerase quality multiplier and DPS/armor points per session |
+
+**Category → skills** (hydro distribution)
 
 - **Defensive** — Survival, Bestial Resilience  
 - **Intellectual** — Cunning, Intelligence  
@@ -75,8 +87,8 @@ cd macos_app
 
 **Output**
 
-- `macos_app/dist/Hydro Point Calculator.app`
-- `macos_app/Hydro-Point-Calculator.dmg`
+- `macos_app/dist/SWG Beastmaster Tools.app`
+- `macos_app/SWG-Beastmaster-Tools.dmg`
 
 Open the DMG and drag the app to Applications.
 
@@ -91,13 +103,22 @@ cd windows_app
 .\build_windows.ps1
 ```
 
-Run `dist\Hydro Point Calculator\Hydro Point Calculator.exe`.
+Run `dist\SWG Beastmaster Tools\SWG Beastmaster Tools.exe`.
 
 ---
 
 ## How to use
 
-### 1. Work session by session
+### Hydrolase calculator tab
+
+1. Switch to **Hydrolase calculator** at the top.
+2. Choose **Centrifuge**, **Processor**, or **Re-processing** — each mode remembers its own inputs when you switch away and come back.
+3. Enter hardware, consumable, and genetic engineering values; results update live.
+4. Use **Focused Enzyme (incubation)** for isomerase session bonus estimates.
+
+### Hydro distribution tab
+
+#### 1. Work session by session
 
 Use the tabs **Session 1**, **Session 2**, and **Session 3**. Each session has its own:
 
@@ -108,7 +129,7 @@ Use the tabs **Session 1**, **Session 2**, and **Session 3**. Each session has i
 
 The **Pool / Allocated / Unplaced** banner shows how many hydro points you can still place in the active session.
 
-### 2. Set purity and sliders
+#### 2. Set purity and sliders
 
 - **Hydrolase purity** — enter the purity you will use (e.g. `19.9` → **19** spendable points; purity does not round up).
 - **Nutrient slider** — moves the Def · Int · Agg split. The ratio label (e.g. `8 · 9 · 3`) updates as you drag. Quick **anchor buttons** jump to common splits.
@@ -116,7 +137,7 @@ The **Pool / Allocated / Unplaced** banner shows how many hydro points you can s
 
 Adjust **Geothermal power OQ**, **Expertise**, **Station quality**, and **FEM** if you want accurate DPS/armor estimates in the summary panel.
 
-### 3. Place hydro points
+#### 3. Place hydro points
 
 In each colored category box:
 
@@ -132,7 +153,7 @@ In each colored category box:
 
 Points fill the **bottom** skill row first (e.g. Bestial Resilience before Survival).
 
-### 4. Appearance mutations
+#### 4. Appearance mutations
 
 In the right sidebar, check **S1 / S2 / S3** when that incubation session rolled an **appearance** mutation (not a stat-only mutation). Each checked session adds up to **+2 per skill** (+12 if every skill has room).
 
@@ -141,7 +162,7 @@ In the right sidebar, check **S1 / S2 / S3** when that incubation session rolled
 
 When both appearance mutations are marked, a read-only **Final** tab shows the completed 60-point picture.
 
-### 5. Combo schedules (sidebar)
+#### 5. Combo schedules (sidebar)
 
 Presets from *Hydro Combos.xls* configure purity and sliders; **you still place hydro bubbles yourself**.
 
@@ -164,11 +185,11 @@ The purity label (e.g. `19·2·15`) stays visible beside the section title after
 
 **Clear session** — wipes hydro in the active tab only. **Reset all** — new plan from scratch.
 
-### 6. Pet mutation enzyme guide
+#### 6. Pet mutation enzyme guide
 
 Choose a pet from the dropdown to view lyase / isomerase requirements by mutation stage (sourced from swgpets.com mirror data). Use this alongside your in-game enzyme crafting; it does not change hydro math.
 
-### 7. Read the summary
+#### 7. Read the summary
 
 Right column tracks:
 
@@ -209,8 +230,10 @@ Then rebuild desktop apps if needed (`macos_app/build_macos.sh` or `windows_app/
 
 | Path | Description |
 |------|-------------|
-| `index.html`, `app.js`, `incubation_calc.js`, `styles.css` | Main web UI |
+| `index.html`, `main.js`, `app.js`, `incubation_calc.js`, `styles.css` | Main web UI |
+| `hydrolase_app.js`, `hydro_calc.js` | Hydrolase refining / incubation calculator |
 | `hydro_combos_data.js` | Generated 48pt / 36pt combo paths |
+| `nutrient_alloc_data.js` | BeastPlanner-matched 1–20 pt hydro gauge lookup |
 | `pet_mutations_data.js` | Generated pet enzyme guide |
 | `start.sh` / `stop.sh` | Local browser server |
 | `python_app/` | pywebview desktop launcher |
@@ -222,7 +245,8 @@ Then rebuild desktop apps if needed (`macos_app/build_macos.sh` or `windows_app/
 
 ## Tips
 
-- If a combo split does not match any nutrient notch, drag the slider manually — the combo still sets the correct **category budgets**; small pools (e.g. 19pt) use the same gauge math as in-game.
+- Nutrient splits for 1–20 pt hydrolase match [BeastPlanner](http://www.tnaclan.com/swg/beastplanner/) (`SetHydro` lookup tables).
+- If a combo split does not match any nutrient notch, drag the slider manually — the combo still sets the correct **category budgets**; small pools (e.g. 19pt) use the same gauge math as BeastPlanner.
 - Session 3 after an S2 appearance mutation often uses **12pt** hydro with a center nutrient split (`1·10·1`) when following classic 60pt guides — the app shows a hint when relevant.
 - FEM affects **DPS/armor** quality multiplier, not hydrolase purity from refining.
 

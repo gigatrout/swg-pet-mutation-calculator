@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Desktop launcher for the Hydro Point Distribution calculator (embedded web UI)."""
+"""Desktop launcher for SWG Beastmaster Tools (embedded web UI)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import webbrowser
 from pathlib import Path
 from typing import Optional
 
-APP_TITLE = "Hydro Point Calculator"
+APP_TITLE = "SWG Beastmaster Tools"
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 900
 MIN_WIDTH = 900

@@ -65,25 +65,6 @@ export function categorySkillIds(categoryId) {
   return { topId, bottomId };
 }
 
-/**
- * Nutrient gauge positions (0–10) at pool=20.
- * 0 = slider all the way up (defensive), 10 = bottom (aggressive).
- * Symmetric around center (5): each step down from center inverts on the ends.
- */
-const NUTRIENT_TABLE_POOL20 = [
-  [20, 0, 0],   // 0  top
-  [17, 3, 0],   // 1
-  [13, 6, 1],   // 2  ← inverse of 8
-  [8, 9, 3],    // 3  ← inverse of 7
-  [4, 13, 3],   // 4  ← inverse of 6
-  [3, 14, 3],   // 5  center
-  [3, 13, 4],   // 6
-  [3, 9, 8],    // 7
-  [1, 6, 13],   // 8
-  [0, 3, 17],   // 9
-  [0, 0, 20],   // 10 bottom
-];
-
 export function hydroPool(purity) {
   const p = Number(purity);
   if (!Number.isFinite(p) || p < 0) {
@@ -92,25 +73,10 @@ export function hydroPool(purity) {
   return Math.floor(p);
 }
 
-export function splitPool(total, ratios) {
-  const sum = ratios.reduce((a, b) => a + b, 0);
-  if (total <= 0 || sum <= 0) {
-    return [0, 0, 0];
-  }
-  const raw = ratios.map((r) => (total * r) / sum);
-  const floors = raw.map((v) => Math.floor(v));
-  let remainder = total - floors.reduce((a, b) => a + b, 0);
-  const order = raw
-    .map((v, i) => ({ i, frac: v - floors[i] }))
-    .sort((a, b) => b.frac - a.frac);
-  const out = [...floors];
-  for (let k = 0; k < remainder; k += 1) {
-    out[order[k % order.length].i] += 1;
-  }
-  return out;
-}
-
-/** Map range-input value to nutrient position (0=top/defensive … 10=bottom/aggressive). */
+/**
+ * Nutrient gauge position (0=defensive … 10=aggressive).
+ * UI slider 0 is aggressive; slider 10 is defensive (matches BeastPlanner EnzymeValue).
+ */
 export function gameNutrientPos(sliderPos) {
   const ui = Math.min(TEMP_MAX, Math.max(0, Math.round(Number(sliderPos) || 0)));
   return TEMP_MAX - ui;
@@ -121,126 +87,18 @@ export function nutrientPosToUi(gamePos) {
   return TEMP_MAX - pos;
 }
 
+/** D·I·A ratio row at 20pt for this slider notch (from BeastPlanner SetHydro). */
 export function nutrientRatios(sliderPos) {
-  return [...NUTRIENT_TABLE_POOL20[gameNutrientPos(sliderPos)]];
+  const pos = gameNutrientPos(sliderPos);
+  return [...NUTRIENT_ALLOC_TABLE[pos][20]];
 }
 
-/** Center notch (3·14·3): end boxes floor, middle absorbs remainder (matches 12pt → 1·10·1). */
-function splitPoolCenter(pool, ratios) {
-  const sum = ratios.reduce((a, b) => a + b, 0);
-  if (pool <= 0 || sum <= 0) {
-    return [0, 0, 0];
-  }
-  const end = Math.floor((pool * ratios[0]) / sum);
-  const intellectual = Math.max(0, pool - 2 * end);
-  return [end, intellectual, end];
-}
-
-/** Trim excess from ratios in repeating order (def, int, agg indices). */
-function trimCycle(pool, ratios, order) {
-  const vals = [...ratios];
-  let excess = vals.reduce((a, b) => a + b, 0) - pool;
-  let orderIdx = 0;
-  let idle = 0;
-  while (excess > 0) {
-    const idx = order[orderIdx++ % order.length];
-    if (vals[idx] > 0) {
-      vals[idx]--;
-      excess--;
-      idle = 0;
-    } else {
-      idle++;
-      if (idle >= order.length) {
-        const fallback = vals.findIndex((v) => v > 0);
-        if (fallback < 0) {
-          break;
-        }
-        vals[fallback]--;
-        excess--;
-        idle = 0;
-      }
-    }
-  }
-  return vals;
-}
-
-/**
- * Intellectual-heavy with defensive second: trim int then agg (keeps def at ratio).
- * e.g. pool 17 @ 8·9·3 → 8·7·2 (in-game validated).
- */
-function splitPoolIntDefSecond(pool, ratios) {
-  return trimCycle(pool, ratios, [1, 1, 2]);
-}
-
-/**
- * Intellectual-heavy with aggressive second: trim int then def, shift def→agg when agg is smallest.
- * e.g. pool 17 @ 3·9·8 → 2·7·8; pool 17 @ 3·13·4 → 2·11·4 (in-game validated).
- */
-function splitPoolIntAggSecond(pool, ratios) {
-  const [defRatio, intRatio, aggRatio] = ratios;
-  const excess = defRatio + intRatio + aggRatio - pool;
-  const result = trimCycle(pool, ratios, [1, 1, 0]);
-  if (aggRatio < defRatio && aggRatio < intRatio && excess > 1) {
-    const shifts = Math.floor((excess - 1) / 2);
-    for (let k = 0; k < shifts && result[0] > 0; k++) {
-      result[0]--;
-      result[2]++;
-    }
-  }
-  return result;
-}
-
-/**
- * Intellectual-heavy notches below 20pt: trim from int, shift to the heavier end.
- * e.g. pool 19 @ 8·9·3 → 9·8·2; pool 19 @ 3·9·8 → 2·8·9 (in-game validated).
- */
-function splitPoolIntelHeavy(pool, ratios) {
-  const [defRatio, intRatio, aggRatio] = ratios;
-  if (intRatio <= defRatio || intRatio <= aggRatio) {
-    return null;
-  }
-  let defensive = defRatio;
-  let intellectual = intRatio;
-  let aggressive = aggRatio;
-  let excess = defensive + intellectual + aggressive - pool;
-  if (excess <= 0) {
-    return [defensive, intellectual, aggressive];
-  }
-  while (excess > 0) {
-    if (defensive > aggressive) {
-      defensive += 1;
-      intellectual -= 1;
-      aggressive -= 1;
-    } else if (defensive < aggressive) {
-      defensive -= 1;
-      intellectual -= 1;
-      aggressive += 1;
-    } else {
-      intellectual -= 1;
-      aggressive -= 1;
-    }
-    excess -= 1;
-  }
-  if (defensive < 0 || intellectual < 0 || aggressive < 0) {
-    return null;
-  }
-  if (defensive + intellectual + aggressive !== pool) {
-    return null;
-  }
-  return [defensive, intellectual, aggressive];
-}
-
+/** Category budgets for hydrolase pool 1–20 at the current nutrient slider. */
 export function categoryAllocation(pool, sliderPos) {
-  const ratios = nutrientRatios(sliderPos);
   const pos = gameNutrientPos(sliderPos);
   const poolKey = Math.min(20, Math.max(0, Math.floor(Number(pool) || 0)));
-  let parts;
-  if (poolKey < 20) {
-    parts = [...NUTRIENT_ALLOC_TABLE[pos][poolKey]];
-  } else {
-    parts = splitPool(poolKey, ratios);
-  }
-  const [defensive, intellectual, aggressive] = parts;
+  const [defensive, intellectual, aggressive] = [...NUTRIENT_ALLOC_TABLE[pos][poolKey]];
+  const ratios = nutrientRatios(sliderPos);
   return { defensive, intellectual, aggressive, ratios };
 }
 
