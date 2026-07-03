@@ -8,6 +8,7 @@ import {
   APPEARANCE_MUTATION_PER_SKILL,
   MAX_APPEARANCE_MUTATIONS,
   countAppearanceMutations,
+  mutationBonusForSession,
   maxPlaceableHydro,
   SESSION3_PURITY_AFTER_S2_MUTATION,
   hydroPool,
@@ -665,6 +666,74 @@ function categoryTotalsFromSkills(skillTotals) {
   );
 }
 
+function countAppearanceMutationsExcept(sessionIndex) {
+  return state.sessions.filter((s, i) => i !== sessionIndex && s.appearanceMutation).length;
+}
+
+function markAppearanceMutation(sessionIndex) {
+  const session = state.sessions[sessionIndex];
+  if (!session || session.appearanceMutation) {
+    return false;
+  }
+  if (countAppearanceMutationsExcept(sessionIndex) >= MAX_APPEARANCE_MUTATIONS) {
+    return false;
+  }
+  session.appearanceMutation = true;
+  return true;
+}
+
+function renderMutationStatus() {
+  const list = document.getElementById("mut-session-status");
+  if (!list) {
+    return;
+  }
+  list.innerHTML = state.sessions
+    .map((session, idx) => {
+      const marked = session.appearanceMutation;
+      const bonus = marked
+        ? mutationBonusForSession(state.sessions, idx)
+        : null;
+      const offered = bonus
+        ? Object.values(bonus).reduce((sum, n) => sum + n, 0)
+        : 0;
+      const label = marked
+        ? `Session ${idx + 1}: mutated (+${offered} free)`
+        : `Session ${idx + 1}: no mutation`;
+      return `<li class="${marked ? "mut-marked" : "mut-clear"}">${label}</li>`;
+    })
+    .join("");
+}
+
+function renderMutateButton() {
+  const btn = document.getElementById("mutate-btn");
+  if (!btn) {
+    return;
+  }
+  const preview = isPreviewTab();
+  const idx = state.activeSession;
+  const session = state.sessions[idx];
+  const marked = Boolean(session?.appearanceMutation);
+  const atCap = countAppearanceMutationsExcept(idx) >= MAX_APPEARANCE_MUTATIONS;
+
+  btn.hidden = preview;
+  btn.disabled = preview || marked || atCap;
+  btn.classList.toggle("active", marked);
+  btn.setAttribute("aria-pressed", marked ? "true" : "false");
+
+  if (marked) {
+    const bonus = mutationBonusForSession(state.sessions, idx);
+    const offered = Object.values(bonus).reduce((sum, n) => sum + n, 0);
+    btn.textContent = `Mutated (+${offered})`;
+    btn.title = `Session ${idx + 1} appearance mutation applied (+2/skill).`;
+  } else if (atCap) {
+    btn.textContent = "Mutated?";
+    btn.title = `Maximum ${MAX_APPEARANCE_MUTATIONS} appearance mutations already marked.`;
+  } else {
+    btn.textContent = "Mutated?";
+    btn.title = `Mark session ${idx + 1} appearance mutation (+2 free points per skill).`;
+  }
+}
+
 function renderSessionTabs() {
   const tabsRoot = document.getElementById("session-tabs");
   if (!tabsRoot) {
@@ -833,8 +902,8 @@ function render() {
         ? " · purple = prior appearance mutation"
         : "";
       skillsHint.textContent = state.activeSession > 0
-        ? `Dim = prior hydro (locked) · click any row left→right · last hydro bubble removes one${mutHint}`
-        : `Click any row left→right within that color’s budget · last hydro bubble removes one${mutHint}`;
+        ? `Dim = prior hydro (locked) · click any row left→right · last hydro bubble removes one${mutHint} · press Mutated? for +2/skill`
+        : `Click any row left→right within that color’s budget · last hydro bubble removes one${mutHint} · press Mutated? for +2/skill`;
     }
   }
 
@@ -878,7 +947,10 @@ function render() {
         .filter((seg) => seg.type === "mutation")
         .reduce((sum, seg) => sum + seg.count, 0);
       const current = preview ? 0 : editSession.points[skill.id] || 0;
-      const total = Math.min(10, priorLen + current);
+      const sessionMutCount = !preview && editSession.appearanceMutation
+        ? mutationBonusForSession(state.sessions, state.activeSession)[skill.id] || 0
+        : 0;
+      const total = Math.min(10, priorLen + current + sessionMutCount);
 
       const row = document.createElement("div");
       row.className = "skill-row";
@@ -895,6 +967,9 @@ function render() {
       }
       if (current > 0) {
         parts.push(`${current} hydro`);
+      }
+      if (sessionMutCount > 0) {
+        parts.push(`${sessionMutCount} mutation`);
       }
       name.title = parts.length > 0
         ? `Total ${total} / 10 (${parts.join(" · ")})`
@@ -916,6 +991,7 @@ function render() {
       };
       const hydroStart = priorLen;
       const hydroEnd = hydroStart + current;
+      const mutEnd = hydroEnd + sessionMutCount;
       let bubbleIndex = 0;
 
       for (const seg of priorSegments) {
@@ -949,13 +1025,17 @@ function render() {
           const removable = !preview && i === hydroEnd - 1;
           pip.disabled = !removable;
           pip.setAttribute("aria-label", `${skill.label} point ${i + 1}`);
+        } else if (i < mutEnd) {
+          pip.classList.add("filled", "mutation-filled");
+          pip.disabled = true;
+          pip.setAttribute("aria-label", `${skill.label} point ${i + 1} (appearance mutation)`);
         } else {
           pip.classList.add("empty");
           pip.setAttribute("aria-label", `${skill.label} point ${i + 1}`);
           if (preview) {
             pip.disabled = true;
           } else {
-            const sessionIndex = i - hydroStart;
+            const sessionIndex = i - mutEnd + current;
             const fillable = !overCapacity
               && canFillToIndex(clickCtx, skill.id, sessionIndex);
             pip.disabled = !fillable;
@@ -976,12 +1056,8 @@ function render() {
     skillsRoot.appendChild(block);
   }
 
-  const mutCount = countAppearanceMutations(state.sessions);
-  document.querySelectorAll("[data-session-mut]").forEach((input) => {
-    const idx = Number(input.dataset.sessionMut);
-    input.checked = Boolean(state.sessions[idx]?.appearanceMutation);
-    input.disabled = !input.checked && mutCount >= MAX_APPEARANCE_MUTATIONS;
-  });
+  renderMutateButton();
+  renderMutationStatus();
 
   const summary = document.getElementById("grand-summary");
   summary.innerHTML = SKILLS.map((skill) => {
@@ -1010,6 +1086,7 @@ function render() {
   document.getElementById("target-note").textContent = targetNote;
 
   const hydroNeeded = Math.max(0, PERFECT_PET_TARGET - gt.mutBonus);
+  const mutCount = countAppearanceMutations(state.sessions);
   let mutNote;
   if (preview) {
     mutNote =
@@ -1021,7 +1098,7 @@ function render() {
     }
   } else {
     mutNote = mutCount === 0
-      ? `No appearance mutations — need ${PERFECT_PET_TARGET} from hydros.`
+      ? `No appearance mutations — press Mutated? on a session or need ${PERFECT_PET_TARGET} from hydros.`
       : `${mutCount}/${MAX_APPEARANCE_MUTATIONS} marked — +${gt.mutBonus} free (+${APPEARANCE_MUTATION_PER_SKILL}/skill). Hydro for 60: ${hydroNeeded}.`;
     if (showPreviewTab()) {
       mutNote += " Open Final tab to see the completed build.";
@@ -1211,6 +1288,11 @@ function bind() {
     const priorSegments = priorSkillSegments(state.sessions, viewBeforeIndex(), skillId);
     const hydroStart = priorSegmentLength(priorSegments);
     const current = active().points[skillId] || 0;
+    const sessionMutCount = active().appearanceMutation
+      ? mutationBonusForSession(state.sessions, state.activeSession)[skillId] || 0
+      : 0;
+    const hydroEnd = hydroStart + current;
+    const mutEnd = hydroEnd + sessionMutCount;
     const index = Number(btn.dataset.index);
     const clickCtx = {
       sessionPoints: active().points,
@@ -1221,32 +1303,28 @@ function bind() {
     if (index < hydroStart) {
       return;
     }
-    const sessionIndex = index - hydroStart;
+    if (index >= hydroEnd && index < mutEnd) {
+      return;
+    }
 
-    if (index < hydroStart + current) {
-      if (index === hydroStart + current - 1) {
+    if (index < hydroEnd) {
+      if (index === hydroEnd - 1) {
         active().points = removePoint(clickCtx, skillId).sessionPoints;
       }
     } else if (!isPoolOverCapacity()) {
+      const sessionIndex = index - mutEnd + current;
       active().points = fillToIndex(clickCtx, skillId, sessionIndex).sessionPoints;
     }
     render();
   });
 
-  document.querySelectorAll("[data-session-mut]").forEach((input) => {
-    input.addEventListener("change", () => {
-      const idx = Number(input.dataset.sessionMut);
-      if (input.checked) {
-        const others = state.sessions.filter((s, i) => i !== idx && s.appearanceMutation).length;
-        if (others >= MAX_APPEARANCE_MUTATIONS) {
-          input.checked = false;
-          return;
-        }
-      }
-      state.sessions[idx].appearanceMutation = input.checked;
-      ensureActiveSessionValid();
+  document.getElementById("mutate-btn")?.addEventListener("click", () => {
+    if (isPreviewTab()) {
+      return;
+    }
+    if (markAppearanceMutation(state.activeSession)) {
       render();
-    });
+    }
   });
 
   document.getElementById("reset-session").addEventListener("click", () => {

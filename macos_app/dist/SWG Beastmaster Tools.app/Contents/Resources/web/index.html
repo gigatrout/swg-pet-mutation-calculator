@@ -77,6 +77,15 @@
             <div><span class="pool-label">Allocated</span> <strong id="pool-spent">0</strong></div>
             <div><span class="pool-label">Unplaced</span> <strong id="pool-remaining">0</strong></div>
           </div>
+          <button
+            type="button"
+            class="mutate-btn"
+            id="mutate-btn"
+            aria-pressed="false"
+            title="Appearance mutation: +2 free points per skill this session"
+          >
+            Mutated?
+          </button>
         </div>
         <p class="field-hint">Spendable points = floor(purity). Purity does not round up. Top isomerase % accepts decimals (e.g. 89.33–90); 90% is the cap.</p>
         <p class="field-hint purity-hint" id="purity-hint"></p>
@@ -160,14 +169,8 @@
           </section>
 
           <section class="summary-block summary-mutation">
-            <fieldset class="mut-fieldset">
-              <legend>Appearance mutation (+2/skill, max 2)</legend>
-              <div class="mut-sessions">
-                <label><input type="checkbox" data-session-mut="0" /> S1</label>
-                <label><input type="checkbox" data-session-mut="1" /> S2</label>
-                <label><input type="checkbox" data-session-mut="2" /> S3</label>
-              </div>
-            </fieldset>
+            <p class="mut-heading">Appearance mutation (+2/skill, max 2)</p>
+            <ul class="mut-session-status" id="mut-session-status" aria-live="polite"></ul>
             <p class="mut-note" id="mut-note"></p>
           </section>
 
